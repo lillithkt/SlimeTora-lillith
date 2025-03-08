@@ -45,6 +45,7 @@
         "typescript": "^5.7.3"
     },
     "dependencies": {
+        "@serialport/bindings-cpp": "^13.0.1",
         "@slimevr/common": "^0.1.2",
         "@slimevr/firmware-protocol": "^0.6.5",
         "@slimevr/tracker-emulation": "^0.2.4",
