@@ -60,7 +60,6 @@
     },
     "pnpm": {
         "onlyBuiltDependencies": [
-            "@abandonware/noble",
             "@parcel/watcher",
             "@serialport/bindings-cpp",
             "electron",
