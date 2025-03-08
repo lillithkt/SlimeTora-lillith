@@ -1,9 +1,7 @@
 name: Build application (macOS, arm64)
 
 on:
-    push:
     workflow_dispatch:
-    create:
 
 jobs:
     build:
@@ -13,21 +11,16 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            - name: Install pnpm
-              uses: pnpm/action-setup@v4
-              with:
-                version: 9.0.6
-
             - name: Set up Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: "20"
 
             - name: Install Node.js dependencies
-              run: pnpm install --frozen-lockfile
+              run: npm install
 
             - name: Build the application
-              run: pnpm run build
+              run: npm run build
 
             - name: Compress macOS build artifacts (arm64)
               run: zip -r build/SlimeTora-darwin-arm64.zip build/SlimeTora-darwin-arm64

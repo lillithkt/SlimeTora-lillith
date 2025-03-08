@@ -1,9 +1,7 @@
 name: Build application (Ubuntu)
 
 on:
-    push:
     workflow_dispatch:
-    create:
 
 jobs:
     build:
@@ -13,15 +11,11 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            - name: Install pnpm
-              uses: pnpm/action-setup@v4
-              with:
-                version: 9.0.6
-
             - name: Set up Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: "20"
+
 
             - name: Install dependencies on Ubuntu
               run: |
@@ -29,10 +23,10 @@ jobs:
                   sudo apt-get install -y libudev-dev
 
             - name: Install Node.js dependencies
-              run: pnpm install --frozen-lockfile
+              run: npm install
 
             - name: Build the application
-              run: pnpm run build
+              run: npm run build
 
             - name: Compress Linux build artifacts (x64)
               run: zip -r build/SlimeTora-linux-x64.zip build/SlimeTora-linux-x64
