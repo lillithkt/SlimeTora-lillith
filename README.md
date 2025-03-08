@@ -9,7 +9,6 @@ My changes of the top of my head are:
 - Change how the soft-bricked tracker fix works
 - Move where config is stored in a development environment
 - Fix language loading in dev environment on macos
-- Migrate to PNPM
 - Make C/I run on every commit
 
 ## SlimeTora's README
