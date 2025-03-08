@@ -56,5 +56,14 @@
         "quaternion": "^2.0.1",
         "rand-seed": "^2.1.7",
         "three": "^0.172.0"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "@abandonware/noble",
+            "@parcel/watcher",
+            "@serialport/bindings-cpp",
+            "electron",
+            "usocket"
+        ]
     }
 }
