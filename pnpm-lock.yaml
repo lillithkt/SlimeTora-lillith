@@ -20,6 +20,9 @@ importers:
       '@slimevr/tracker-emulation':
         specifier: ^0.2.4
         version: 0.2.4
+      delegates:
+        specifier: ^1.0.0
+        version: 1.0.0
       haritorax-interpreter:
         specifier: ^3.2.3
         version: 3.2.3(encoding@0.1.13)
@@ -3105,8 +3108,7 @@ snapshots:
   delayed-stream@1.0.0:
     optional: true
 
-  delegates@1.0.0:
-    optional: true
+  delegates@1.0.0: {}
 
   detect-libc@1.0.3:
     optional: true

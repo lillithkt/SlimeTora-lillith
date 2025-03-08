@@ -49,6 +49,7 @@
         "@slimevr/common": "^0.1.2",
         "@slimevr/firmware-protocol": "^0.6.5",
         "@slimevr/tracker-emulation": "^0.2.4",
+        "delegates": "^1.0.0",
         "haritorax-interpreter": "^3.2.3",
         "i18next": "^24.2.1",
         "loc-i18next": "^0.1.6",
