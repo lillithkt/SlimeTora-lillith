@@ -1,9 +1,7 @@
 name: Build application (Windows)
 
 on:
-    push:
     workflow_dispatch:
-    create:
 
 jobs:
     build:
