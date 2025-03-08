@@ -659,13 +659,7 @@ ipcMain.on("set-server-port", (_event, arg) => {
     log(`Server port set to: ${arg}`, "settings");
 });
 
-let fixing = false;
-let fixingIntervalId: NodeJS.Timeout;
-let fixingStartTime: number;
-let fixingCommandCount: number;
 ipcMain.on("fix-trackers", async () => {
-    if (!fixing) {
-        fixing = true;
     log("Fixing soft-bricked (boot-looping) trackers...", "connection");
 
     // @ts-ignore
@@ -673,8 +667,15 @@ ipcMain.on("fix-trackers", async () => {
     // Sensor mode 2, 50 FPS, Accel sensor auto correction, ankle disabled
     const commands = ["o0:00000000101000", `o1:00000000101000`];
 
-    fixingStartTime = Date.now();
-    fixingCommandCount = 0;
+    const dialogOptions: Electron.MessageBoxOptions = {
+        type: "info",
+        buttons: ["OK"],
+        title: await translate("dialogs.fixTrackers.title"),
+        message: await translate("dialogs.fixTrackers.message"),
+    };
+
+    const startTime = Date.now();
+    let commandCount = 0;
 
     const sendCommands = async () => {
         for (const port in ports) {
@@ -684,29 +685,24 @@ ipcMain.on("fix-trackers", async () => {
                         error(`Error writing data to serial port ${port}: ${err}`, "connection");
                     }
                 });
-                fixingCommandCount++;
+                commandCount++;
                 await new Promise((resolve) => setTimeout(resolve, 100));
             }
         }
     };
 
-    fixingIntervalId = setInterval(sendCommands, 75);
-    // await dialog.showMessageBox(dialogOptions);
-} else {
-    fixing = false;
-    clearInterval(fixingIntervalId);
+    const intervalId = setInterval(sendCommands, 100);
+    await dialog.showMessageBox(mainWindow, dialogOptions);
+    clearInterval(intervalId);
 
     const endTime = Date.now();
-    const duration = (endTime - fixingStartTime) / 1000;
-    // @ts-ignore
-    const ports: ActivePorts = device.getComInstance().getActivePorts();
+    const duration = (endTime - startTime) / 1000;
     log(
-        `Dialog was open for ${duration} seconds, accounting for ${fixingCommandCount} times sent to ports: ${Object.keys(
+        `Dialog was open for ${duration} seconds, accounting for ${commandCount} times sent to ports: ${Object.keys(
             ports
         ).join(", ")}`,
         "connection"
     );
-}
 });
 
 ipcMain.on("open-support-page", async () => {
