@@ -2,11 +2,6 @@ name: Build application (Windows)
 
 on:
     push:
-        branches:
-            - main
-        paths:
-            - ".github/workflows/build-windows.yml"
-            - package.json
     workflow_dispatch:
     create:
 
@@ -18,16 +13,21 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                version: 9.0.6
+
             - name: Set up Node.js
               uses: actions/setup-node@v4
               with:
                   node-version: "20"
 
             - name: Install Node.js dependencies
-              run: npm install
+              run: pnpm install --frozen-lockfile
 
             - name: Build the application
-              run: npm run build
+              run: pnpm run build
 
             - name: Compress Windows build artifacts (x64)
               run: powershell Compress-Archive -Path build\SlimeTora-win32-x64\* -DestinationPath build\SlimeTora-win32-x64.zip

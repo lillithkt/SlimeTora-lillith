@@ -1,8 +1,22 @@
+# SlimeTora - Lillith's Changes
+
+These are my personal changes to slimetora, to make transitioning between devices easier.
+
+My changes of the top of my head are:
+
+- Seed the random mac address with the tracker name
+- Set my defaults
+- Change how the soft-bricked tracker fix works
+- Move where config is stored in a development environment
+- Fix language loading in dev environment on macos
+- Migrate to PNPM
+- Make C/I run on every commit
+
+## SlimeTora's README
+
 <!--suppress HtmlDeprecatedAttribute -->
 <div align="center">
 <img src="docs/icon.png" width="128px">
-
-# SlimeTora
 
 A program that connects the HaritoraX trackers to the [SlimeVR server](https://docs.slimevr.dev/server/index.html), supporting both the `HaritoraX Wireless` and `HaritoraX Wired` (1.1b/1.1/1.0). Supports `Bluetooth` (low energy), `Bluetooth` (classic) (w/ `COM`), and the `GX(6/2)` communication dongles (w/ `COM`).
 

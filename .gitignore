@@ -101,3 +101,5 @@ build/
 out/
 
 notes.txt
+
+config.json

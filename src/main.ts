@@ -13,13 +13,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const mainPath = app.isPackaged ? path.dirname(app.getPath("exe")) : __dirname;
-const configPath = path.resolve(mainPath, "config.json");
+const configPath = app.isPackaged ? path.resolve(mainPath, "config.json") : path.resolve(path.join(mainPath, ".."), "config.json")
 const isMac = process.platform === "darwin";
 // don't mess with this or languages will fail to load cause of how the project is structured, lol
 // i hate how this is done.
 const languagesPath = path.resolve(
     mainPath,
-    isMac ? ".." : "",
+    (isMac && app.isPackaged) ? ".." : "",
     app.isPackaged ? (isMac ? "Resources/languages" : "resources/languages") : "languages"
 );
 let mainWindow: BrowserWindow;
@@ -80,11 +80,11 @@ try {
 
     // Set configuration variables
     canLogToFile = config.global?.debug?.canLogToFile ?? true;
-    wirelessTrackerEnabled = config.global?.trackers?.wirelessTrackerEnabled ?? false;
+    wirelessTrackerEnabled = config.global?.trackers?.wirelessTrackerEnabled ?? true;
     wiredTrackerEnabled = config.global?.trackers?.wiredTrackerEnabled ?? false;
-    autoOff = config.global?.autoOff ?? false;
-    appUpdatesEnabled = config.global?.updates?.appUpdatesEnabled ?? true;
-    translationsUpdatesEnabled = config.global?.updates?.translationsUpdatesEnabled ?? true;
+    autoOff = config.global?.autoOff ?? true;
+    appUpdatesEnabled = config.global?.updates?.appUpdatesEnabled ?? false;
+    translationsUpdatesEnabled = config.global?.updates?.translationsUpdatesEnabled ?? false;
     updateChannel = config.global?.updates?.updateChannel ?? "stable";
     heartbeatInterval = config.global?.trackers?.heartbeatInterval ?? 2000;
     loggingMode = config.global?.debug?.loggingMode ?? 1;
@@ -659,7 +659,13 @@ ipcMain.on("set-server-port", (_event, arg) => {
     log(`Server port set to: ${arg}`, "settings");
 });
 
+let fixing = false;
+let fixingIntervalId: NodeJS.Timeout;
+let fixingStartTime: number;
+let fixingCommandCount: number;
 ipcMain.on("fix-trackers", async () => {
+    if (!fixing) {
+        fixing = true;
     log("Fixing soft-bricked (boot-looping) trackers...", "connection");
 
     // @ts-ignore
@@ -667,15 +673,8 @@ ipcMain.on("fix-trackers", async () => {
     // Sensor mode 2, 50 FPS, Accel sensor auto correction, ankle disabled
     const commands = ["o0:00000000101000", `o1:00000000101000`];
 
-    const dialogOptions: Electron.MessageBoxOptions = {
-        type: "info",
-        buttons: ["OK"],
-        title: await translate("dialogs.fixTrackers.title"),
-        message: await translate("dialogs.fixTrackers.message"),
-    };
-
-    const startTime = Date.now();
-    let commandCount = 0;
+    fixingStartTime = Date.now();
+    fixingCommandCount = 0;
 
     const sendCommands = async () => {
         for (const port in ports) {
@@ -685,24 +684,29 @@ ipcMain.on("fix-trackers", async () => {
                         error(`Error writing data to serial port ${port}: ${err}`, "connection");
                     }
                 });
-                commandCount++;
+                fixingCommandCount++;
                 await new Promise((resolve) => setTimeout(resolve, 100));
             }
         }
     };
 
-    const intervalId = setInterval(sendCommands, 100);
-    await dialog.showMessageBox(dialogOptions);
-    clearInterval(intervalId);
+    fixingIntervalId = setInterval(sendCommands, 75);
+    // await dialog.showMessageBox(dialogOptions);
+} else {
+    fixing = false;
+    clearInterval(fixingIntervalId);
 
     const endTime = Date.now();
-    const duration = (endTime - startTime) / 1000;
+    const duration = (endTime - fixingStartTime) / 1000;
+    // @ts-ignore
+    const ports: ActivePorts = device.getComInstance().getActivePorts();
     log(
-        `Dialog was open for ${duration} seconds, accounting for ${commandCount} times sent to ports: ${Object.keys(
+        `Dialog was open for ${duration} seconds, accounting for ${fixingCommandCount} times sent to ports: ${Object.keys(
             ports
         ).join(", ")}`,
         "connection"
     );
+}
 });
 
 ipcMain.on("open-support-page", async () => {
@@ -1166,6 +1170,8 @@ import { EmulatedTracker } from "@slimevr/tracker-emulation";
 import { ActivePorts } from "haritorax-interpreter/dist/mode/com";
 import BetterQuaternion from "quaternion";
 import { ParsedUrlQueryInput } from "querystring";
+import { config } from "process";
+import Rand from "rand-seed";
 
 // For haritorax-interpreter
 // Used to handle errors coming from haritorax-interpreter and display them to the user if wanted
@@ -1239,6 +1245,11 @@ async function addTracker(trackerName: string) {
     processQueue();
 }
 
+function MacAddressFromName(name: string) {
+    const rand = new Rand(name);
+    return new MACAddress(new Array(6).fill(0).map(() => Math.floor(rand.next() * 256)) as any)
+}
+
 async function processQueue() {
     if (isProcessingQueue || trackerQueue.length === 0) return;
     isProcessingQueue = true;
@@ -1251,7 +1262,7 @@ async function processQueue() {
         if (connectedDevices.get(trackerName) !== undefined) return;
 
         // Check if tracker has a MAC address assigned already in the config
-        let macAddress = MACAddress.random();
+        let macAddress = MacAddressFromName(trackerName);
         let macBytes = config.trackers?.[trackerName]?.macAddress?.bytes;
         if (macBytes && macBytes.length === 6) {
             macAddress = new MACAddress(macBytes);
